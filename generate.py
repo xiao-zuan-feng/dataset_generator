@@ -39,19 +39,13 @@ def adjust_text_length(tokenizer, text, target_len):
     return adjusted
 
 
-def generate_gsm8k_dataset(tokenizer, input_len, output_len, data_num, gsm8k_path, no_repeat=False):
-    picker = GSM8KPicker(gsm8k_path, no_repeat=no_repeat)
+def generate_gsm8k_dataset(tokenizer, input_len, output_len, data_num, gsm8k_path):
+    picker = GSM8KPicker(gsm8k_path, no_repeat=False)
     samples = []
     pbar = tqdm(total=data_num, desc="Generating GSM8K dataset", unit="row") if tqdm else None
 
-    attempts = 0
-    max_attempts = data_num * 10
-    while len(samples) < data_num and attempts < max_attempts:
-        attempts += 1
+    for _ in range(data_num):
         raw_text = picker.pick_one()
-        if raw_text is None:
-            logging.error("GSM8K 数据已用尽，请降低 data_num 或关闭 no_repeat")
-            break
         prompt = adjust_text_length(tokenizer, raw_text, input_len)
         sample = {"prompt": prompt}
         if output_len is not None:
@@ -65,20 +59,13 @@ def generate_gsm8k_dataset(tokenizer, input_len, output_len, data_num, gsm8k_pat
     return samples
 
 
-def generate_sharegpt_dataset(tokenizer, input_len, output_len, data_num, sharegpt_path, no_repeat=False):
-    picker = ShareGPTPicker(sharegpt_path, no_repeat=no_repeat)
+def generate_sharegpt_dataset(tokenizer, input_len, output_len, data_num, sharegpt_path):
+    picker = ShareGPTPicker(sharegpt_path, no_repeat=False)
     samples = []
     pbar = tqdm(total=data_num, desc="Generating ShareGPT dataset", unit="row") if tqdm else None
 
-    attempts = 0
-    max_attempts = data_num * 10
-    while len(samples) < data_num and attempts < max_attempts:
-        attempts += 1
+    for _ in range(data_num):
         raw_data = picker.pick_one()
-        if raw_data is None:
-            logging.error("ShareGPT 数据已用尽，请降低 data_num 或关闭 no_repeat")
-            break
-
         conversations = raw_data.get("conversations", raw_data.get("conversation", []))
 
         human_parts = []
@@ -121,7 +108,6 @@ def main():
     parser.add_argument("--output_dir", type=str, default=None, help="输出目录（默认读 config.py）")
     parser.add_argument("--gsm8k_path", type=str, default=None, help="GSM8K 数据源路径（默认读 config.py）")
     parser.add_argument("--sharegpt_path", type=str, default=None, help="ShareGPT 数据源路径（默认读 config.py）")
-    parser.add_argument("--no_repeat", action="store_true", default=False, help="不重复选取数据源（数据用尽后停止）")
     parser.add_argument("--seed", type=int, default=None, help="随机种子")
     args = parser.parse_args()
 
@@ -137,10 +123,10 @@ def main():
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
     if args.dataset_type == "gsm8k":
-        samples = generate_gsm8k_dataset(tokenizer, args.input_len, args.output_len, args.data_num, gsm8k_path, args.no_repeat)
+        samples = generate_gsm8k_dataset(tokenizer, args.input_len, args.output_len, args.data_num, gsm8k_path)
         ds_tag = "GSM8K"
     else:
-        samples = generate_sharegpt_dataset(tokenizer, args.input_len, args.output_len, args.data_num, sharegpt_path, args.no_repeat)
+        samples = generate_sharegpt_dataset(tokenizer, args.input_len, args.output_len, args.data_num, sharegpt_path)
         ds_tag = "ShareGPT"
 
     out_tag = f"-out{args.output_len}" if args.output_len else ""
