@@ -11,14 +11,40 @@ dataset_generator/
 ├── generate.py          # 主生成脚本
 ├── data_picker.py       # 数据选择器
 ├── config.py            # 配置文件
-├── sources/
-│   ├── GSM8K.jsonl      # GSM8K 数据源（1319条）
-│   └── sharegpt/
-│       └── computer_en_26k.jsonl  # ShareGPT 数据源（20692条英文）
+├── sources/             # 数据源目录（需自行下载，见下方说明）
 └── output/              # 生成数据集的输出目录
 ```
 
-## 一、修改 config.py
+## 一、准备数据源
+
+数据源文件未包含在仓库中，需自行下载到 `sources/` 目录下：
+
+### GSM8K 数据源
+
+```bash
+mkdir -p sources
+# 从 HuggingFace 下载 GSM8K 数据集的 test 部分并转换为 jsonl 格式
+# 每行格式: {"question": "...", "answer": "..."}
+# 下载后放置为 sources/GSM8K.jsonl（1319条）
+```
+
+GSM8K 数据可以从 [HuggingFace](https://huggingface.co/datasets/gsm8k) 获取，需要将 `question` 和 `answer` 字段提取为 JSONL 格式。
+
+### ShareGPT 数据源
+
+```bash
+mkdir -p sources/sharegpt
+# 从 ModelScope 下载
+git clone https://www.modelscope.cn/datasets/huangjintao/sharegpt.git
+# 将所需文件复制到 sources/sharegpt/ 目录
+cp sharegpt/computer_en_26k.jsonl sources/sharegpt/
+```
+
+建议使用 `computer_en_26k.jsonl`（20692条英文计算机类对话），如需中文数据可选用 `computer_zh_26k.jsonl` 或 `unknow_zh_38k.jsonl`。
+
+下载完成后，修改 `config.py` 中对应路径即可。
+
+## 二、修改 config.py
 
 使用前修改 `config.py`，填入模型权重路径（HuggingFace 格式，需包含 `tokenizer.json`、`tokenizer_config.json`）：
 
