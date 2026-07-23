@@ -135,7 +135,8 @@ vllm bench serve \
     --dataset-name custom \
     --dataset-path output/ShareGPT-in2048-out2048-num100.jsonl \
     --custom-output-len -1 \
-    --num-prompts 100
+    --num-prompts 100 \
+    --concurrency 40
 
 # 场景2：输出长度不在数据集中写，由 benchmark 命令统一指定
 python generate.py --dataset_type sharegpt --input_len 2048 --data_num 100
@@ -145,7 +146,8 @@ vllm bench serve \
     --dataset-name custom \
     --dataset-path output/ShareGPT-in2048-num100.jsonl \
     --custom-output-len 2048 \
-    --num-prompts 100
+    --num-prompts 100 \
+    --concurrency 40
 
 # 场景3：精确控制输入长度（跳过 chat template，避免额外 token）
 vllm bench serve \
@@ -155,7 +157,8 @@ vllm bench serve \
     --dataset-path output/ShareGPT-in2048-out2048-num100.jsonl \
     --custom-output-len -1 \
     --skip-chat-template \
-    --num-prompts 100
+    --num-prompts 100 \
+    --concurrency 40
 
 # 场景4：GSM8K 数据
 python generate.py --dataset_type gsm8k --input_len 1024 --output_len 512 --data_num 50
@@ -165,7 +168,8 @@ vllm bench serve \
     --dataset-name custom \
     --dataset-path output/GSM8K-in1024-out512-num50.jsonl \
     --custom-output-len -1 \
-    --num-prompts 50
+    --num-prompts 50 \
+    --concurrency 40
 ```
 
 ### `--custom-output-len` 参数说明
@@ -187,7 +191,8 @@ vllm bench serve \
     --dataset-name random \
     --random-input-len 2048 \
     --random-output-len 2048 \
-    --num-prompts 100
+    --num-prompts 100 \
+    --concurrency 40
 ```
 
 **区别**：
