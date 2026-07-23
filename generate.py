@@ -39,7 +39,7 @@ def adjust_text_length(tokenizer, text, target_len):
     return adjusted
 
 
-def generate_gsm8k_dataset(tokenizer, input_len, output_len, data_num, gsm8k_path):
+def generate_gsm8k_dataset(tokenizer, input_len, data_num, gsm8k_path):
     picker = GSM8KPicker(gsm8k_path, no_repeat=False)
     samples = []
     pbar = tqdm(total=data_num, desc="Generating GSM8K dataset", unit="row") if tqdm else None
@@ -47,10 +47,7 @@ def generate_gsm8k_dataset(tokenizer, input_len, output_len, data_num, gsm8k_pat
     for _ in range(data_num):
         raw_text = picker.pick_one()
         prompt = adjust_text_length(tokenizer, raw_text, input_len)
-        sample = {"prompt": prompt}
-        if output_len is not None:
-            sample["output_tokens"] = output_len
-        samples.append(sample)
+        samples.append({"prompt": prompt})
         if pbar:
             pbar.update(1)
 
@@ -59,7 +56,7 @@ def generate_gsm8k_dataset(tokenizer, input_len, output_len, data_num, gsm8k_pat
     return samples
 
 
-def generate_sharegpt_dataset(tokenizer, input_len, output_len, data_num, sharegpt_path):
+def generate_sharegpt_dataset(tokenizer, input_len, data_num, sharegpt_path):
     picker = ShareGPTPicker(sharegpt_path, no_repeat=False)
     samples = []
     pbar = tqdm(total=data_num, desc="Generating ShareGPT dataset", unit="row") if tqdm else None
@@ -78,10 +75,7 @@ def generate_sharegpt_dataset(tokenizer, input_len, output_len, data_num, shareg
             continue
 
         prompt = adjust_text_length(tokenizer, " ".join(human_parts), input_len)
-        sample = {"prompt": prompt}
-        if output_len is not None:
-            sample["output_tokens"] = output_len
-        samples.append(sample)
+        samples.append({"prompt": prompt})
         if pbar:
             pbar.update(1)
 
@@ -103,7 +97,6 @@ def main():
     parser.add_argument("--tokenizer_path", type=str, default=None, help="模型 tokenizer 路径（默认读 config.py）")
     parser.add_argument("--dataset_type", type=str, required=True, choices=["gsm8k", "sharegpt"], help="数据集类型")
     parser.add_argument("--input_len", type=int, required=True, help="输入 prompt 的 token 长度")
-    parser.add_argument("--output_len", type=int, default=None, help="模型输出 token 长度（写入数据集的 output_tokens 字段，方便 vLLM benchmark 使用 --custom-output-len -1 按行读取）")
     parser.add_argument("--data_num", type=int, required=True, help="生成数据条数")
     parser.add_argument("--output_dir", type=str, default=None, help="输出目录（默认读 config.py）")
     parser.add_argument("--gsm8k_path", type=str, default=None, help="GSM8K 数据源路径（默认读 config.py）")
@@ -123,22 +116,19 @@ def main():
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
     if args.dataset_type == "gsm8k":
-        samples = generate_gsm8k_dataset(tokenizer, args.input_len, args.output_len, args.data_num, gsm8k_path)
+        samples = generate_gsm8k_dataset(tokenizer, args.input_len, args.data_num, gsm8k_path)
         ds_tag = "GSM8K"
     else:
-        samples = generate_sharegpt_dataset(tokenizer, args.input_len, args.output_len, args.data_num, sharegpt_path)
+        samples = generate_sharegpt_dataset(tokenizer, args.input_len, args.data_num, sharegpt_path)
         ds_tag = "ShareGPT"
 
-    out_tag = f"-out{args.output_len}" if args.output_len else ""
-    filename = f"{ds_tag}-in{args.input_len}{out_tag}-num{len(samples)}.jsonl"
+    filename = f"{ds_tag}-in{args.input_len}-num{len(samples)}.jsonl"
     output_path = os.path.join(output_dir, filename)
     write_jsonl(samples, output_path)
 
     logging.info(f"生成完成: {len(samples)} 条数据, 输入长度 {args.input_len} tokens")
-    if args.output_len:
-        logging.info(f"  输出长度: {args.output_len} tokens (写入 output_tokens 字段)")
     logging.info(f"输出文件: {output_path}")
-    logging.info(f"vLLM benchmark 使用方式: vllm bench serve --dataset-name custom --dataset-path {output_path} --custom-output-len {args.output_len or 256}")
+    logging.info(f"vLLM benchmark 使用方式: vllm bench serve --dataset-name custom --dataset-path {output_path} --custom-output-len <输出长度>")
 
 
 if __name__ == "__main__":
