@@ -113,51 +113,61 @@ vLLM 的 `sharegpt` 数据集类型有两个限制：
 先启动 vLLM 服务：
 
 ```bash
-vllm serve /home/weights/model_weights --port 8000
+vllm serve /models/Qwen3-32B-W8A8 --port 8000 --served-model-name qwen332
 ```
 
 跑 benchmark：
 
 ```bash
-# 场景1：ShareGPT 2k输入 / 2k输出
+# 场景1：GSM8K 1k输入 / 1k输出
+python generate.py --dataset_type gsm8k --input_len 1024 --data_num 1000
+vllm bench serve \
+    --backend openai-chat \
+    --model /models/Qwen3-32B-W8A8 \
+    --base-url http://localhost:8000 \
+    --endpoint /v1/chat/completions \
+    --dataset-name custom \
+    --dataset-path output/GSM8K-in1024-num1000.jsonl \
+    --custom-output-len 1024 \
+    --skip-chat-template \
+    --ignore-eos \
+    --seed 250 \
+    --served-model-name qwen332 \
+    --max-concurrency 250
+
+# 场景2：ShareGPT 2k输入 / 2k输出
 python generate.py --dataset_type sharegpt --input_len 2048 --data_num 100
 vllm bench serve \
+    --backend openai-chat \
+    --model /models/Qwen3-32B-W8A8 \
     --base-url http://localhost:8000 \
-    --model model_name \
-    --dataset-name custom \
-    --dataset-path output/ShareGPT-in2048-num100.jsonl \
-    --custom-output-len 2048 \
-    --num-prompts 100 \
-    --max-concurrency 40
-
-# 场景2：精确控制输入长度（跳过 chat template，避免额外 token）
-vllm bench serve \
-    --base-url http://localhost:8000 \
-    --model model_name \
+    --endpoint /v1/chat/completions \
     --dataset-name custom \
     --dataset-path output/ShareGPT-in2048-num100.jsonl \
     --custom-output-len 2048 \
     --skip-chat-template \
-    --num-prompts 100 \
-    --max-concurrency 40
-
-# 场景3：GSM8K 数据
-python generate.py --dataset_type gsm8k --input_len 1024 --data_num 50
-vllm bench serve \
-    --base-url http://localhost:8000 \
-    --model model_name \
-    --dataset-name custom \
-    --dataset-path output/GSM8K-in1024-num50.jsonl \
-    --custom-output-len 512 \
-    --num-prompts 50 \
+    --ignore-eos \
+    --seed 250 \
+    --served-model-name qwen332 \
     --max-concurrency 40
 ```
 
-### `--custom-output-len` 参数说明
+### vLLM bench serve 常用参数说明
 
-| 值 | 含义 |
+| 参数 | 说明 |
 | --- | --- |
-| 正整数（如 `2048`） | 所有请求统一使用该输出长度 |
+| `--backend openai-chat` | 使用 OpenAI Chat API 格式发送请求 |
+| `--model` | 模型权重路径（用于 tokenizer） |
+| `--base-url` | vLLM 服务地址 |
+| `--endpoint` | API 端点，Chat 接口为 `/v1/chat/completions` |
+| `--dataset-name custom` | 使用 custom 数据集类型（读 JSONL，无长度限制） |
+| `--dataset-path` | 数据集文件路径 |
+| `--custom-output-len` | 模型输出 token 长度 |
+| `--skip-chat-template` | 跳过 chat template，精确控制输入 token 数 |
+| `--ignore-eos` | 忽略 EOS token，确保模型输出到指定长度 |
+| `--served-model-name` | vLLM 服务注册的模型名称 |
+| `--max-concurrency` | 最大并发请求数 |
+| `--seed` | 随机种子 |
 
 ## 五、vLLM 自带的指定长度测试方式
 
@@ -166,12 +176,15 @@ vLLM 内置了 `random` 数据集类型，可以直接指定输入和输出长�
 ```bash
 # 直接用 random 数据集测 2k输入/2k输出
 vllm bench serve \
+    --backend openai-chat \
+    --model /models/Qwen3-32B-W8A8 \
     --base-url http://localhost:8000 \
-    --model model_name \
+    --endpoint /v1/chat/completions \
     --dataset-name random \
     --random-input-len 2048 \
     --random-output-len 2048 \
-    --num-prompts 100 \
+    --ignore-eos \
+    --served-model-name qwen332 \
     --max-concurrency 40
 ```
 
