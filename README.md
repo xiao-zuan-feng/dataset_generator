@@ -113,7 +113,7 @@ vLLM 的 `sharegpt` 数据集类型有两个限制：
 先启动 vLLM 服务：
 
 ```bash
-vllm serve /models/Qwen3-32B-W8A8 --port 8000 --served-model-name qwen332
+vllm serve <模型路径> --port 8000 --served-model-name <模型名>
 ```
 
 跑 benchmark：
@@ -123,7 +123,7 @@ vllm serve /models/Qwen3-32B-W8A8 --port 8000 --served-model-name qwen332
 python generate.py --dataset_type gsm8k --input_len 1024 --data_num 1000
 vllm bench serve \
     --backend openai-chat \
-    --model /models/Qwen3-32B-W8A8 \
+    --model <模型路径> \
     --base-url http://localhost:8000 \
     --endpoint /v1/chat/completions \
     --dataset-name custom \
@@ -132,14 +132,14 @@ vllm bench serve \
     --skip-chat-template \
     --ignore-eos \
     --seed 250 \
-    --served-model-name qwen332 \
+    --served-model-name <模型名> \
     --max-concurrency 250
 
 # 场景2：ShareGPT 2k输入 / 2k输出
 python generate.py --dataset_type sharegpt --input_len 2048 --data_num 100
 vllm bench serve \
     --backend openai-chat \
-    --model /models/Qwen3-32B-W8A8 \
+    --model <模型路径> \
     --base-url http://localhost:8000 \
     --endpoint /v1/chat/completions \
     --dataset-name custom \
@@ -148,7 +148,7 @@ vllm bench serve \
     --skip-chat-template \
     --ignore-eos \
     --seed 250 \
-    --served-model-name qwen332 \
+    --served-model-name <模型名> \
     --max-concurrency 40
 ```
 
@@ -177,14 +177,14 @@ vLLM 内置了 `random` 数据集类型，可以直接指定输入和输出长�
 # 直接用 random 数据集测 2k输入/2k输出
 vllm bench serve \
     --backend openai-chat \
-    --model /models/Qwen3-32B-W8A8 \
+    --model <模型路径> \
     --base-url http://localhost:8000 \
     --endpoint /v1/chat/completions \
     --dataset-name random \
     --random-input-len 2048 \
     --random-output-len 2048 \
     --ignore-eos \
-    --served-model-name qwen332 \
+    --served-model-name <模型名> \
     --max-concurrency 40
 ```
 
