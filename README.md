@@ -129,6 +129,7 @@ vllm bench serve \
     --dataset-name custom \
     --dataset-path output/GSM8K-in1024-num1000.jsonl \
     --custom-output-len 1024 \
+    --num-prompts 160 \
     --skip-chat-template \
     --ignore-eos \
     --seed 250 \
@@ -163,6 +164,7 @@ vllm bench serve \
 | `--dataset-name custom` | 使用 custom 数据集类型（读 JSONL，无长度限制） |
 | `--dataset-path` | 数据集文件路径 |
 | `--custom-output-len` | 模型输出 token 长度 |
+| `--num-prompts` | 发送请求数，不指定则跑完全部数据 |
 | `--skip-chat-template` | 跳过 chat template，精确控制输入 token 数 |
 | `--ignore-eos` | 忽略 EOS token，确保模型输出到指定长度 |
 | `--served-model-name` | vLLM 服务注册的模型名称 |
